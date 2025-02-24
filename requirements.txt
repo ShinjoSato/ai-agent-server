@@ -1,0 +1,4 @@
+elevenlabs
+speechrecognition
+pyaudio
+openai
