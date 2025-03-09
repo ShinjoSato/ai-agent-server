@@ -2,3 +2,6 @@ elevenlabs
 speechrecognition
 pyaudio
 openai
+dotenv
+langgraph
+grandalf
