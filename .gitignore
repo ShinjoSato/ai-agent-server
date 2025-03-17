@@ -1,5 +1,5 @@
 tmp*
-.ipynb_checkpoints/*
+.ipynb_checkpoints
 output/*
 *__pycache__*
 
