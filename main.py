@@ -55,8 +55,8 @@ workflow.set_finish_point("end_node")
 
 # ワークフローのコンパイル
 graph = workflow.compile()
-print(graph.get_graph())
-print(graph.get_graph().draw_ascii())
+# print(graph.get_graph())
+# print(graph.get_graph().draw_ascii())
 
 
 # ワークフローの実行
@@ -67,7 +67,6 @@ def run_workflow(question: str):
 
 # 実行例
 if __name__ == "__main__":
-    question = "明日の東京の天気は？"
-    print(question)
+    question = "東京で桜はいつ頃から咲きますか？"
+    print('ユーザー >>', question)
     audio_output = run_workflow(question)
-    # print("生成された音声のURL:", audio_output)

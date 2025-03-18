@@ -13,10 +13,8 @@ output_file="output/outputtmp.mp3" # 実行ファイルのディレクトリ上�
 client = ElevenLabs(api_key=api_key)
 
 
-# def generate_speech(text, output_file="output/output.mp3"):
 def generate_speech(inputs: dict) -> dict:
     state = inputs["state"]
-    print('generate_speech')
     audio_stream = client.text_to_speech.convert(
         text=state["final_summary"],
         voice_id=voice_id,

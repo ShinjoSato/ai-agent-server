@@ -12,7 +12,6 @@ perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://
 
 # Perplexity APIを使って検索
 def search_with_perplexity(inputs: dict) -> dict:
-    print('search_with_perplexity')
     state = inputs["state"]
 
     response = perplexity_client.chat.completions.create(
@@ -27,5 +26,5 @@ def search_with_perplexity(inputs: dict) -> dict:
         },]
     )
     state["perplexity_response"] = response.choices[0].message.content
-    print(state["perplexity_response"],)
+    print('Perplexity >>',state["perplexity_response"],)
     return {"state": state}

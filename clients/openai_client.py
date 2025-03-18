@@ -17,14 +17,12 @@ def answer_with_openai(inputs: dict) -> dict:
         messages=[{"role": "user", "content": state["question"]}]
     )
     state["openai_response"] = response.choices[0].message.content
-    print('answer_with_openai')
-    print(state["openai_response"] ,)
+    print('OpenAI >>', state["openai_response"] ,)
     return {"state": state}
 
 
 # OpenAI APIを使って回答が十分かを判定
 def check_response_quality(inputs: dict) -> dict:
-    print("check_response_quality!!!")
     state = inputs["state"]
     response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
@@ -39,14 +37,11 @@ def check_response_quality(inputs: dict) -> dict:
     state["need_search"] = "No" not in response.choices[0].message.content
     next = "search_with_perplexity" if state["need_search"] else "summarize_with_openai"
     state["next"] = next
-    print('check_response_quality')
-    print(state,)
     return {"state": state, "next": next}
 
 
 # OpenAI APIで最終的な回答を要約
 def summarize_with_openai(inputs: dict) -> dict:
-    print('summarize_with_openai')
     state = inputs["state"]
     content_to_summarize = state["openai_response"]
     if state["need_search"]:
@@ -59,5 +54,5 @@ def summarize_with_openai(inputs: dict) -> dict:
         messages=[{"role": "user", "content": f"次の文章を50トークン以内で要約してください:\n\n{content_to_summarize}"}]
     )
     state["final_summary"] = response.choices[0].message.content
-    print(state["final_summary"],)
+    print('OpenAI >>', state["final_summary"],)
     return {"state": state}
