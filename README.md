@@ -1,6 +1,8 @@
 # 分身AIエージェント（サーバーサイド）
 
-![スクショ](public/aiagent_client_screen.png)
+<div style="display: flex; justify-content: center;">
+    <video controls src="https://github.com/user-attachments/assets/71b373b3-8df1-48ed-91ba-c99c4dd591bf" muted="true"></video>
+</div>
 
 ## 概要
 
