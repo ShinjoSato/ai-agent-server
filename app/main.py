@@ -67,6 +67,6 @@ def run_workflow(question: str):
 
 # 実行例
 if __name__ == "__main__":
-    question = "東京で桜はいつ頃から咲きますか？"
+    question = "今日は何の日ですか？"
     print('ユーザー >>', question)
     audio_output = run_workflow(question)
