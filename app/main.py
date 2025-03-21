@@ -1,17 +1,11 @@
-import os
 import io
-from dotenv import load_dotenv
-from langgraph.graph import StateGraph
 from fastapi import FastAPI, WebSocket
 from pydantic import BaseModel
 import speech_recognition as sr
 from pydub import AudioSegment
 
-# .env ファイルをロード
-load_dotenv()
+from agents.langgraph.graph import create_graph
 
-# APIキーを環境変数から取得
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 # システムの状態を管理するクラス
 class QAState:
@@ -24,45 +18,7 @@ class QAState:
         self.audio_url = None
         self.next = None
 
-def end_node(inputs: dict) -> dict:
-    state = inputs["state"]
-    return {"state": state}
-
-from clients.openai_client import answer_with_openai, check_response_quality, summarize_with_openai
-from clients.perplexity_client import search_with_perplexity
-from clients.elevenlabs_client import generate_speech
-
-# LangGraphでワークフローを構築
-workflow = StateGraph(dict)  # ✅ `dict` を状態として使う
-
-workflow.add_node("answer_with_openai", answer_with_openai)
-workflow.add_node("check_response_quality", check_response_quality)
-workflow.add_node("search_with_perplexity", search_with_perplexity)
-workflow.add_node("summarize_with_openai", summarize_with_openai)
-workflow.add_node("generate_speech", generate_speech)
-workflow.add_node("end_node", end_node)
-
-
-workflow.set_entry_point("answer_with_openai")
-workflow.add_edge("answer_with_openai", "check_response_quality")
-workflow.add_conditional_edges(
-    "check_response_quality",
-    lambda state: state["next"], {
-        "search_with_perplexity": "search_with_perplexity",
-        "summarize_with_openai": "summarize_with_openai"
-    }
-)
-workflow.add_edge("search_with_perplexity", "summarize_with_openai")
-workflow.add_edge("summarize_with_openai", "generate_speech")
-workflow.add_edge( "generate_speech", "end_node")
-workflow.set_finish_point("end_node")
-
-
-# ワークフローのコンパイル
-graph = workflow.compile()
-# print(graph.get_graph())
-# print(graph.get_graph().draw_ascii())
-
+graph = create_graph()
 
 # ワークフローの実行
 def run_workflow(question: str):
@@ -142,12 +98,11 @@ def convertSpeech2Text():
 """
 MP3ファイルを送信
 """
-async def sendMP3(websocket):
+async def sendMP3(websocket, file_path):
     response = {
         'status': True,
         'message': ''
     }
-    file_path = "output/output.mp3"
     # chunk_size = 1024 * 64  # 64KB チャンクで送信（改善点: 速度向上）
     try:
         with open(file_path, "rb") as audio_file:
@@ -180,7 +135,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({'message': '要約 >>'})
     
     # 回答用の音声ファイルを送信
-    await sendMP3(websocket)
+    await sendMP3(websocket=websocket, file_path="output/output.mp3")
    
     await websocket.send_json({'message': '終了'})
     await websocket.close() # WebSocket を切断
