@@ -1,6 +1,11 @@
 import os
+import io
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph
+from fastapi import FastAPI, WebSocket
+from pydantic import BaseModel
+import speech_recognition as sr
+from pydub import AudioSegment
 
 # .env ファイルをロード
 load_dotenv()
@@ -65,8 +70,117 @@ def run_workflow(question: str):
     result = graph.invoke({"state": state})  # ✅ `state` を `dict` にして渡す
     return result["state"]["audio_url"]  # ✅ `dict` から `audio_url` を取得
 
-# 実行例
-if __name__ == "__main__":
-    question = "今日は何の日ですか？"
-    print('ユーザー >>', question)
-    audio_output = run_workflow(question)
+
+app = FastAPI()
+
+# リクエストボディの定義
+class AskRequest(BaseModel):
+    question: str
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello, FastAPI test!"}
+
+@app.post("/ask")
+def ask(request: AskRequest):
+    question = request.question
+    return {"question": question, "message": 'メッセージ'}
+
+
+"""
+受信したバイナリデータを音声ファイルで保存
+"""
+def downloadWav(data):
+    print('downloadWav')
+    response = {
+        "status": True,
+        "message": ''
+    }
+    try:
+        # 受信する音声データを格納
+        audio_data = bytearray()
+        audio_data.extend(data)
+        file_path = "download/received_audio.wav"
+        audio = AudioSegment.from_file(io.BytesIO(audio_data), format="webm")
+        audio.export(file_path, format="wav")
+    except Exception as e:
+        response['status'] = False
+        response['message'] = e
+        print(e)
+    finally:
+        return response
+
+
+"""
+Google Speech Recognition で文字起こし
+"""
+def convertSpeech2Text():
+    response = {
+        "status": True,
+        "message": ''
+    }
+    recognizer = sr.Recognizer()
+    file_path = "download/received_audio.wav"
+    with sr.AudioFile(file_path) as source:
+        audio = recognizer.record(source)
+        try:
+            text = recognizer.recognize_google(audio, language="ja-JP")
+            response['message'] = text
+            print("文字起こし結果:", text)
+        except sr.UnknownValueError as e:
+            response['status'] = False
+            response['message'] = e
+            print(e)
+        except sr.RequestError as e:
+            print('えーら')
+            response['status'] = False
+            response['message'] = e
+            print(e)
+        finally:
+            return response
+
+"""
+MP3ファイルを送信
+"""
+async def sendMP3(websocket):
+    response = {
+        'status': True,
+        'message': ''
+    }
+    file_path = "output/output.mp3"
+    # chunk_size = 1024 * 64  # 64KB チャンクで送信（改善点: 速度向上）
+    try:
+        with open(file_path, "rb") as audio_file:
+            mp3_data = audio_file.read()
+            await websocket.send_bytes(mp3_data)
+    except Exception as e:
+        print(f"エラー: {e}")
+        response['status'] = False
+        response['message'] = e
+    return response
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    # 音声ファイルの作成
+    data = await websocket.receive_bytes()
+    downloadWav(data)
+
+    # 音声ファイルをテキストへ変換
+    speech = convertSpeech2Text()
+
+    # AIエージェント起動
+    if speech['status']:
+        print(speech['message'])
+        await websocket.send_json({'message': 'ユーザー >>' + speech['message']})
+        audio_output = run_workflow(speech['message'])
+        print(audio_output)
+        await websocket.send_json({'message': '要約 >>'})
+    
+    # 回答用の音声ファイルを送信
+    await sendMP3(websocket)
+   
+    await websocket.send_json({'message': '終了'})
+    await websocket.close() # WebSocket を切断

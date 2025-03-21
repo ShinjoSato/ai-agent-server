@@ -9,7 +9,7 @@ print("Loaded .env:", loaded)
 
 api_key = os.getenv("ELEVENLABS_API_KEY")
 voice_id = os.getenv("ELEVENLABS_VOICE_ID")
-output_file="output/outputtmp.mp3" # 実行ファイルのディレクトリ上の"output_file"のファイル名で作成される
+output_file="output/output.mp3" # 実行ファイルのディレクトリ上の"output_file"のファイル名で作成される
 client = ElevenLabs(api_key=api_key)
 
 

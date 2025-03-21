@@ -39,3 +39,20 @@
 - ```.env.example```ファイルをコピーして新たに```.env```を作成し、使用するAPIキーなどを入力してください。
 - ```requirements.txt```に書かれているpipライブラリをインストールしてください。
 - 実行ファイルは```main.py```です。
+- ffmpegをインストールする必要がある
+
+
+## 実行コマンド
+
+- **起動**
+
+    ```sh
+    cd app
+    python -m uvicorn main:app --reload
+    ```
+
+- **サーバー接続テスト**
+
+    ```sh
+     curl -X POST "http://127.0.0.1:8000/ask" -H "Content-Type: application/json" -d "{\"question\": \"今日の日本のニュースは何の日ですか？\"}"
+    ```

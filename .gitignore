@@ -1,6 +1,7 @@
 tmp*
 .ipynb_checkpoints
 app/output/*
+app/download/*
 *__pycache__*
 
 .env

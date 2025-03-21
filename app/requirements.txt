@@ -5,3 +5,7 @@ openai
 dotenv
 langgraph
 grandalf
+uvicorn
+fastapi
+pydantic
+pydub
