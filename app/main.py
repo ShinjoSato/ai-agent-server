@@ -56,7 +56,7 @@ def downloadWav(data):
         # 受信する音声データを格納
         audio_data = bytearray()
         audio_data.extend(data)
-        file_path = "download/received_audio.wav"
+        file_path = "data/uploads/received_audio.wav"
         audio = AudioSegment.from_file(io.BytesIO(audio_data), format="webm")
         audio.export(file_path, format="wav")
     except Exception as e:
@@ -76,7 +76,7 @@ def convertSpeech2Text():
         "message": ''
     }
     recognizer = sr.Recognizer()
-    file_path = "download/received_audio.wav"
+    file_path = "data/uploads/received_audio.wav"
     with sr.AudioFile(file_path) as source:
         audio = recognizer.record(source)
         try:
@@ -135,7 +135,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({'message': '要約 >>'})
     
     # 回答用の音声ファイルを送信
-    await sendMP3(websocket=websocket, file_path="output/output.mp3")
+    await sendMP3(websocket=websocket, file_path="data/outputs/output.mp3")
    
     await websocket.send_json({'message': '終了'})
     await websocket.close() # WebSocket を切断

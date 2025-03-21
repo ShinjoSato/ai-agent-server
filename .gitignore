@@ -1,7 +1,10 @@
 tmp*
 .ipynb_checkpoints
-app/output/*
-app/download/*
 *__pycache__*
 
 .env
+
+app/data/uploads/*
+!app/data/uploads/.gitkeep
+app/data/outputs/*
+!app/data/outputs/.gitkeep
