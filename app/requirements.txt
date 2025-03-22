@@ -9,3 +9,5 @@ uvicorn
 fastapi
 pydantic
 pydub
+langsmith
+langchain_core

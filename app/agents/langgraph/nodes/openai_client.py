@@ -1,12 +1,14 @@
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
+
+from langsmith.wrappers import wrap_openai
 
 # .env ファイルをロード
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+openai_client = wrap_openai(OpenAI(api_key=OPENAI_API_KEY))
 
 
 # OpenAI APIを使って質問に回答

@@ -1,13 +1,15 @@
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
+
+from langsmith.wrappers import wrap_openai
 
 # .env ファイルをロード
 load_dotenv()
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 
 # Perplexity クライアントを作成
-perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
+perplexity_client = wrap_openai(OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai"))
 
 
 # Perplexity APIを使って検索
