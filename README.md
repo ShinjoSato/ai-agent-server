@@ -1,7 +1,7 @@
 # 🧠 分身AIエージェント - サーバーサイド（Backend）
 
 <div style="display: flex; justify-content: center;">
-    <video controls src="https://youtu.be/SpQfy-eprmg" muted="true"></video>
+    <video controls src="https://github.com/user-attachments/assets/91f5082e-8054-4e4d-974d-65f6d2d1c68b" muted="true"></video>
 </div>
 
 このリポジトリは、**音声入力に対して生成AIを用いて分析・返答し、自分の声で返す**ことができる「分身AIエージェント」の**サーバーサイドアプリケーション**です。  
