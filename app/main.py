@@ -114,6 +114,7 @@ async def sendMP3(websocket, file_path):
         response['message'] = e
     return response
 
+import time
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -126,13 +127,17 @@ async def websocket_endpoint(websocket: WebSocket):
     # 音声ファイルをテキストへ変換
     speech = convertSpeech2Text()
 
-    # AIエージェント起動
-    if speech['status']:
-        print(speech['message'])
-        await websocket.send_json({'message': 'ユーザー >>' + speech['message']})
-        audio_output = run_workflow(speech['message'])
-        print(audio_output)
-        await websocket.send_json({'message': '要約 >>'})
+    print('今から4秒停止します')
+    time.sleep(4) # 4秒止める
+    print('4秒経過しました')
+
+    # # AIエージェント起動
+    # if speech['status']:
+    #     print(speech['message'])
+    #     await websocket.send_json({'message': 'ユーザー >>' + speech['message']})
+    #     audio_output = run_workflow(speech['message'])
+    #     print(audio_output)
+    #     await websocket.send_json({'message': '要約 >>'})
     
     # 回答用の音声ファイルを送信
     await sendMP3(websocket=websocket, file_path="data/outputs/output.mp3")
