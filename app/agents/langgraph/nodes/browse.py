@@ -1,5 +1,5 @@
-from agents.llm.perplexity_llm import PerplexityLLM as LLM
-from utils.file_handle import load_prompt
+# from agents.llm.perplexity_llm import PerplexityLLM as LLM
+from agents.llm.tavily_llm import TavilyLLM as LLM
 
 
 # LLMを使って検索
@@ -13,9 +13,8 @@ def browse_web(inputs: dict) -> dict:
 
 def _browse_with_llm(prompt: str) -> str:
     llm = LLM()
-    character_prompt = load_prompt("prompts/hattori.md")
     response = llm.execute(
-        system_prompts=[character_prompt],
-        user_prompt=[prompt]
+        system_prompts=[],
+        user_prompts=[prompt]
     )
     return response
