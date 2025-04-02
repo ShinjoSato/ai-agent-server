@@ -11,3 +11,4 @@ pydantic
 pydub
 langsmith
 langchain_core
+google-generativeai

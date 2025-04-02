@@ -24,7 +24,7 @@ graph = create_graph()
 def run_workflow(question: str):
     state = QAState(question).__dict__  # ✅ `dict` に変換
     result = graph.invoke({"state": state})  # ✅ `state` を `dict` にして渡す
-    return result["state"]["audio_url"]  # ✅ `dict` から `audio_url` を取得
+    return result["state"]  # ✅ `dict` から `audio_url` を取得
 
 
 app = FastAPI()
@@ -140,3 +140,10 @@ async def websocket_endpoint(websocket: WebSocket):
    
     await websocket.send_json({'message': '終了'})
     await websocket.close() # WebSocket を切断
+
+@app.post("/test")
+def ask(request: AskRequest):
+    question = request.question
+    audio_output = run_workflow(question)
+
+    return {"message": "Good bye."}
