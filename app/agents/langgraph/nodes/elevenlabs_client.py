@@ -1,4 +1,3 @@
-# from IPython.display import Audio, display
 import os
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
