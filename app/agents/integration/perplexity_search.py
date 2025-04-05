@@ -12,7 +12,7 @@ PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 perplexity_client = wrap_openai(OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai"))
 
 
-from agents.llm.openai_llm import OpenAILLM
+from agents.integration.openai_llm import OpenAILLM
 
 class PerplexityLLM(OpenAILLM):
     def __init__(self):

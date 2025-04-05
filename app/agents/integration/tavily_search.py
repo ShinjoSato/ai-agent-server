@@ -7,7 +7,7 @@ load_dotenv()
 
 client = TavilyClient()
 
-from agents.llm.base_llm import BaseLLM
+from agents.integration.base_llm import BaseLLM
 
 class TavilyLLM(BaseLLM):
 

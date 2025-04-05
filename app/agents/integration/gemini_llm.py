@@ -2,7 +2,7 @@ import os
 import google.generativeai as genai
 from langsmith import traceable
 from dotenv import load_dotenv
-from agents.llm.base_llm import BaseLLM
+from agents.integration.base_llm import BaseLLM
 
 # .env ファイルをロード
 load_dotenv()

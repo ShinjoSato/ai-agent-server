@@ -1,5 +1,5 @@
-from agents.llm.tavily_llm import TavilyLLM
-from agents.llm.gemini_llm import GeminiLLM
+from agents.integration.tavily_search import TavilyLLM
+from agents.integration.gemini_llm import GeminiLLM
 
 
 """
