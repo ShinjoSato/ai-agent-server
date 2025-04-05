@@ -4,20 +4,26 @@ from agents.llm.gemini_llm import GeminiLLM as LLM
 # OpenAI APIを使って回答が十分かを判定
 def route_workflow(inputs: dict) -> dict:
     state = inputs["state"]
-    response = _route_workflow(prompts=[state['question'], state['openai_response']])
-    state["need_search"] = "No" not in response
-    next = "browse_web" if state["need_search"] else "summarize_with_openai"
+    response = _route_workflow(prompts=[state['question']])
+    state["select_ai"] = response.strip() 
+    next = state["select_ai"]
     state["next"] = next
     return {"state": state, "next": next}
 
 def _route_workflow(prompts: list[str]) -> str:
     llm = LLM()
     response = llm.execute(
-        system_prompts=["以下の回答が十分か、それともインターネット検索が必要か判断してください。"],
-        user_prompts=[f"質問: {prompts[0]}\n"
-            f"回答: {prompts[1]}\n\n"
-            "この回答で十分なら「NO」と答えてください。\n"
-            "情報が不十分で検索が必要なら「YES」と答えてください。"
-        ]
+        system_prompts=[
+            """
+            貴方は優秀なAIのエキスパートです。
+            ユーザーの質問内容を理解し、質問を答えるのに最も適したAIを数字で教えてください。
+            数字のみ答えてください。
+            Geminiの場合は「1」と答えてください。
+            Tavilyの場合は「2」と答えてください。
+            答えがわからない場合は「1」と答えてください。
+            Tavilyはリアルタイムで情報を取得できます。
+            """
+        ],
+        user_prompts=[prompts[0]]
     )
     return response

@@ -6,7 +6,7 @@ def retrieve_information(inputs: dict) -> dict:
     state = inputs["state"]
     response = _retrieve_information(prompt=state["question"])
     print('OpenAI >>', response,)
-    state["openai_response"] = response
+    state["response"] = response
     return {"state": state}
 
 

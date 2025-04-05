@@ -7,7 +7,7 @@ def browse_web(inputs: dict) -> dict:
     state = inputs["state"]
     response = _browse_with_llm(prompt=state["question"])
     print('Perplexity >>', response,)
-    state["perplexity_response"] = response
+    state["response"] = response
     return {"state": state}
 
 

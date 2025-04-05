@@ -11,10 +11,8 @@ from agents.langgraph.graph import create_graph
 class QAState:
     def __init__(self, question: str):
         self.question = question
-        self.openai_response = None
-        self.need_search = None
-        self.perplexity_response = None
-        self.final_summary = None
+        self.response = None
+        self.summary = None
         self.audio_url = None
         self.next = None
 
@@ -130,15 +128,14 @@ async def websocket_endpoint(websocket: WebSocket):
     # AIエージェント起動
     if speech['status']:
         print(speech['message'])
-        await websocket.send_json({'message': 'ユーザー >>' + speech['message']})
+        await websocket.send_json({speech['message']})
         audio_output = run_workflow(speech['message'])
         print(audio_output)
-        await websocket.send_json({'message': '要約 >>'})
+        print(audio_output['summary'])
+        await websocket.send_json({'message': audio_output['summary']})
     
     # 回答用の音声ファイルを送信
     await sendMP3(websocket=websocket, file_path="data/outputs/output.mp3")
-   
-    await websocket.send_json({'message': '終了'})
     await websocket.close() # WebSocket を切断
 
 @app.post("/test")
