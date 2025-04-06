@@ -60,7 +60,7 @@ def route_workflow(inputs: dict) -> dict:
 
 
 """
-LLMを使って質問に回答
+RAGを使って質問に回答
 """
 def retrieve_information(inputs: dict) -> dict:
     state = inputs["state"]

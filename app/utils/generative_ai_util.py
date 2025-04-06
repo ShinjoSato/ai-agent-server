@@ -1,6 +1,7 @@
 from agents.integration.tavily_search import TavilyLLM
 from agents.integration.gemini_llm import GeminiLLM
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+from agents.integration.qdrant_database import QdrantDB
+from llama_index.core import VectorStoreIndex
 from langsmith import traceable
 
 
@@ -32,14 +33,9 @@ def retrieval_augmented_generation(user_prompt: str) -> str:
     """
     RAG (Retrieval-Augmented Generation)を使った検索をする。
     """
-
-    # データ読み込み（PDFを ./data に置く）
-    documents = SimpleDirectoryReader("./knowledge").load_data()
-
     # LLMをGeminiに設定してインデックス作成
     llm = GeminiLLM()
-    # index = VectorStoreIndex.from_documents(documents, llm=llm)
-    index =  convert_documents_into_index(documents=documents, llm=llm)
+    index =  convert_documents_into_index(llm=llm)
 
     # クエリ実行
     query_engine = index.as_query_engine()
@@ -48,8 +44,10 @@ def retrieval_augmented_generation(user_prompt: str) -> str:
 
 
 @traceable(name="vector-store-index")
-def convert_documents_into_index(documents, llm):
+def convert_documents_into_index(llm):
     """
     ドキュメントをベクトル化
     """
-    return VectorStoreIndex.from_documents(documents, llm=llm)
+    qdrant_db = QdrantDB()
+    vector_store = qdrant_db.get_store()
+    return VectorStoreIndex.from_vector_store(vector_store=vector_store, llm=llm)
