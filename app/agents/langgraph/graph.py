@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph
 from agents.integration.elevenlabs_tts import ElevenLabs
 from utils.file_handle import load_prompt
-from utils.generative_ai_util import ask_question, surf_internet
+from utils.generative_ai_util import ask_question, surf_internet, retrieval_augmented_generation
 
 
 def _get_workflow():
@@ -64,7 +64,7 @@ LLMを使って質問に回答
 """
 def retrieve_information(inputs: dict) -> dict:
     state = inputs["state"]
-    response = ask_question(user_prompt=state["question"])
+    response = retrieval_augmented_generation(user_prompt=state["question"])
     print('OpenAI >>', response,)
     state["response"] = response
     return {"state": state}

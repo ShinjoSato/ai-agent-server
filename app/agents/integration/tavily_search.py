@@ -7,9 +7,9 @@ load_dotenv()
 
 client = TavilyClient()
 
-from agents.integration.base_llm import BaseLLM
+from agents.integration.integration import Integration
 
-class TavilyLLM(BaseLLM):
+class TavilyLLM(Integration):
 
     def execute(self, system_prompts: list[str], user_prompts: list[str]):
         response = self.__execute(system_prompts=system_prompts, user_prompts=user_prompts)

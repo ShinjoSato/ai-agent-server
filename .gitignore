@@ -8,3 +8,5 @@ app/data/uploads/*
 !app/data/uploads/.gitkeep
 app/data/outputs/*
 !app/data/outputs/.gitkeep
+app/knowledge/*
+!app/knowledge/.gitkeep

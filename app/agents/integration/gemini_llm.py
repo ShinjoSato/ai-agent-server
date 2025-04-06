@@ -2,7 +2,10 @@ import os
 import google.generativeai as genai
 from langsmith import traceable
 from dotenv import load_dotenv
-from agents.integration.base_llm import BaseLLM
+from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageRole
+from llama_index.core.base.llms.generic_utils import messages_to_prompt
+
+from agents.integration.llm import CustomLLM
 
 # .env ファイルをロード
 load_dotenv()
@@ -15,12 +18,14 @@ genai.configure(api_key=GEMINI_API_KEY)
 gemini_model = genai.GenerativeModel("models/gemini-1.5-flash")
 
 # Geminiクライアント
-class GeminiLLM(BaseLLM):
+class GeminiLLM(CustomLLM):
 
     def execute(self, system_prompts: list[str], user_prompts: list[str]):
-        response = self.__execute(system_prompts=system_prompts, user_prompts=user_prompts)
-        return response.text
+        response = self.chat([ChatMessage(role=MessageRole.USER, content='\n'.join(system_prompts + user_prompts))])
+        return response.message.content
     
     @traceable(name="Gemini")
-    def __execute(self, system_prompts: list[str], user_prompts: list[str]):
-        return gemini_model.generate_content(system_prompts + user_prompts)
+    def chat(self, messages: list[ChatMessage], **kwargs) -> ChatResponse:
+        prompt = messages_to_prompt(messages)
+        response = gemini_model.generate_content(prompt)
+        return ChatResponse(message=ChatMessage(role=MessageRole.ASSISTANT, content=response.text))

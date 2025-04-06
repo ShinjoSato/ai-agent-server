@@ -13,3 +13,4 @@ langsmith
 langchain_core
 google-generativeai
 tavily-python
+llama-index

@@ -10,10 +10,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 openai_client = wrap_openai(OpenAI(api_key=OPENAI_API_KEY))
 
-from agents.integration.base_llm import BaseLLM
+from agents.integration.integration import Integration
 
 # OpenAIクライアント
-class OpenAILLM(BaseLLM):
+class OpenAILLM(Integration):
     def __init__(self):
         self.system_prompts = []
         self.user_prompts = []
