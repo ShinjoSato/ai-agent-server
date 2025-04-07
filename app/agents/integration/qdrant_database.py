@@ -1,9 +1,7 @@
 import os
 from dotenv import load_dotenv
-# from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 
 # .env ファイルをロード

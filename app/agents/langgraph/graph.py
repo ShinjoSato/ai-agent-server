@@ -12,8 +12,8 @@ def _get_workflow():
     workflow.add_node("retrieve_information", retrieve_information)
     workflow.add_node("browse_web", browse_web)
     workflow.add_node("summarize", summarize)
+    workflow.add_node("transliterate", transliterate)
     workflow.add_node("generate_speech", generate_speech)
-    workflow.add_node("end_node", end_node)
 
 
     workflow.set_entry_point("route_workflow")
@@ -26,9 +26,9 @@ def _get_workflow():
     )
     workflow.add_edge("retrieve_information", "summarize")
     workflow.add_edge("browse_web", "summarize")
-    workflow.add_edge("summarize", "generate_speech")
-    workflow.add_edge( "generate_speech", "end_node")
-    workflow.set_finish_point("end_node")
+    workflow.add_edge("summarize", "transliterate")
+    workflow.add_edge("transliterate", "generate_speech")
+    workflow.set_finish_point( "generate_speech")
 
     # ワークフローのコンパイル
     return workflow
@@ -87,14 +87,30 @@ def browse_web(inputs: dict) -> dict:
 def summarize(inputs: dict) -> dict:
     state = inputs["state"]
     content_to_summarize = state["response"]
+    question = state["question"]
 
     character_prompt = load_prompt("prompts/hattori.md")
     response = ask_question(
-        user_prompt=f"以下の文章を50トークン以内で要約して音声合成用のひらがなに変換してください。\n\n文章:\n{content_to_summarize}",
+        user_prompt=f"以下の質問に対する回答を50トークン以内で要約してください。\n\n質問:\n{question}\n\n回答:\n{content_to_summarize}",
         system_prompts=[character_prompt]
     )
     state["summary"] = response
     print('要約 >>', response,)
+    return {"state": state}
+
+
+"""
+漢字が含まれる文をひらがな化
+"""
+def transliterate(inputs: dict) -> dict:
+    state = inputs["state"]
+    summary = state["summary"]
+    response = ask_question(
+        user_prompt=f"以下の文章をひらがなに変換してください。\n\n文章:\n{summary}",
+        system_prompts=[]
+    )
+    state["summary"] = response
+    print('ひらがな >>', response,)
     return {"state": state}
 
 
@@ -113,7 +129,3 @@ def create_graph():
     graph = workflow.compile()
     print(graph.get_graph().draw_ascii())
     return graph
-
-def end_node(inputs: dict) -> dict:
-    state = inputs["state"]
-    return {"state": state}
