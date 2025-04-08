@@ -10,11 +10,13 @@ from agents.langgraph.graph import create_graph
 # システムの状態を管理するクラス
 class QAState:
     def __init__(self, question: str):
+        self.language = None
         self.question = question
         self.response = None
         self.summary = None
         self.audio_url = None
         self.next = None
+        self.answer = None
 
 graph = create_graph()
 

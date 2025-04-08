@@ -8,15 +8,18 @@ def _get_workflow():
     # LangGraphでワークフローを構築
     workflow = StateGraph(dict)  # ✅ `dict` を状態として使う
 
+    workflow.add_node("identify_language", identify_language)
     workflow.add_node("route_workflow", route_workflow)
     workflow.add_node("retrieve_information", retrieve_information)
     workflow.add_node("browse_web", browse_web)
     workflow.add_node("summarize", summarize)
+    workflow.add_node("translate", translate)
     workflow.add_node("transliterate", transliterate)
     workflow.add_node("generate_speech", generate_speech)
 
 
-    workflow.set_entry_point("route_workflow")
+    workflow.set_entry_point("identify_language")
+    workflow.add_edge("identify_language", "route_workflow")
     workflow.add_conditional_edges(
         "route_workflow",
         lambda state: state["next"], {
@@ -26,12 +29,38 @@ def _get_workflow():
     )
     workflow.add_edge("retrieve_information", "summarize")
     workflow.add_edge("browse_web", "summarize")
-    workflow.add_edge("summarize", "transliterate")
+    workflow.add_conditional_edges(
+        "summarize",
+        lambda state: state["is_japanese"], {
+            True: "transliterate",
+            False: "translate"
+        }
+    )
     workflow.add_edge("transliterate", "generate_speech")
+    workflow.add_edge("translate", "generate_speech")
     workflow.set_finish_point( "generate_speech")
 
     # ワークフローのコンパイル
     return workflow
+
+
+"""
+質問が何言語で話されたかを判断する。
+"""
+def identify_language(inputs: dict) -> dict:
+    state = inputs["state"]
+    system_prompts = [
+        """
+        ユーザーの質問が何言語か教えてください。
+        - 英語の場合は「ENGLISH」と答えてください。
+        - 日本語の場合は「JAPANESE」と答えてください。
+        - 中国語の場合は「CHINESE」と答えてください。
+        - それ以外の場合は「OTHER」と答えてください。
+        """
+    ]
+    response = ask_question(user_prompt=f"質問:\n{state['question']}", system_prompts=system_prompts)
+    state["language"] = response
+    return {"state": state}
 
 
 """
@@ -96,6 +125,23 @@ def summarize(inputs: dict) -> dict:
     )
     state["summary"] = response
     print('要約 >>', response,)
+    is_japanese = state["language"] == "JAPANESE\n"
+    return {"state": state, "is_japanese": is_japanese}
+
+
+"""
+翻訳する。
+"""
+def translate(inputs: dict) -> dict:
+    state = inputs["state"]
+    summary = state["summary"]
+    language = state["language"]
+    response = ask_question(
+        user_prompt=f"以下の文章を指定された言語に翻訳してください。\n\n文章:\n{summary}\n\n言語:\n{language}",
+        system_prompts=[]
+    )
+    state["answer"] = response
+    print('翻訳 >>', response)
     return {"state": state}
 
 
@@ -109,7 +155,7 @@ def transliterate(inputs: dict) -> dict:
         user_prompt=f"以下の文章をひらがなに変換してください。\n\n文章:\n{summary}",
         system_prompts=[]
     )
-    state["summary"] = response
+    state["answer"] = response
     print('ひらがな >>', response,)
     return {"state": state}
 
@@ -120,7 +166,7 @@ def transliterate(inputs: dict) -> dict:
 def generate_speech(inputs: dict) -> dict:
     state = inputs["state"]
     elvnlbs = ElevenLabs()
-    elvnlbs.execute(user_prompts=state["summary"])
+    elvnlbs.execute(user_prompts=state["answer"])
     return {"state": state}
 
 
