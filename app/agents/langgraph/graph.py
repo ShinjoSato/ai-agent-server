@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph
 from agents.integration.elevenlabs_tts import ElevenLabs
 from utils.file_handle import load_prompt
 from utils.generative_ai_util import ask_question, surf_internet, retrieval_augmented_generation
+from utils.util import get_logger
 
 
 def _get_workflow():
@@ -59,6 +60,7 @@ def identify_language(inputs: dict) -> dict:
         """
     ]
     response = ask_question(user_prompt=f"質問:\n{state['question']}", system_prompts=system_prompts)
+    get_logger().info(response)
     state["language"] = response
     return {"state": state}
 
@@ -81,6 +83,7 @@ def route_workflow(inputs: dict) -> dict:
         """
     ]
     response = ask_question(user_prompt=state['question'], system_prompts=system_prompts)
+    get_logger().info(response)
 
     state["select_ai"] = response.strip() 
     next = state["select_ai"]
@@ -94,7 +97,7 @@ RAGを使って質問に回答
 def retrieve_information(inputs: dict) -> dict:
     state = inputs["state"]
     response = retrieval_augmented_generation(user_prompt=state["question"])
-    print('OpenAI >>', response,)
+    get_logger().info(f"OpenAI >> {response}")
     state["response"] = response
     return {"state": state}
 
@@ -105,7 +108,7 @@ LLMを使ってネット検索
 def browse_web(inputs: dict) -> dict:
     state = inputs["state"]
     response = surf_internet(prompt=state["question"])
-    print('Perplexity >>', response,)
+    get_logger().info(f"Perplexity >> {response}")
     state["response"] = response
     return {"state": state}
 
@@ -124,7 +127,7 @@ def summarize(inputs: dict) -> dict:
         system_prompts=[character_prompt]
     )
     state["summary"] = response
-    print('要約 >>', response,)
+    get_logger().info(f"要約 >> {response}")
     is_japanese = state["language"] == "JAPANESE\n"
     return {"state": state, "is_japanese": is_japanese}
 
@@ -141,7 +144,7 @@ def translate(inputs: dict) -> dict:
         system_prompts=[]
     )
     state["answer"] = response
-    print('翻訳 >>', response)
+    get_logger().info(f"翻訳 >> {response}")
     return {"state": state}
 
 
@@ -156,7 +159,7 @@ def transliterate(inputs: dict) -> dict:
         system_prompts=[]
     )
     state["answer"] = response
-    print('ひらがな >>', response,)
+    get_logger().info(f"ひらがな >> {response}")
     return {"state": state}
 
 
@@ -167,11 +170,39 @@ def generate_speech(inputs: dict) -> dict:
     state = inputs["state"]
     elvnlbs = ElevenLabs()
     elvnlbs.execute(user_prompts=state["answer"])
+    get_logger().info('成功')
     return {"state": state}
 
 
+"""
+システムの状態を管理するクラス
+"""
+class QAState:
+    def __init__(self, question: str):
+        self.language = None
+        self.question = question
+        self.response = None
+        self.summary = None
+        self.audio_url = None
+        self.next = None
+        self.answer = None
+
+
+"""
+ワークフローの実行
+"""
+def run_workflow(question: str):
+    state = QAState(question).__dict__  # ✅ `dict` に変換
+    graph = create_graph()
+    result = graph.invoke({"state": state})  # ✅ `state` を `dict` にして渡す
+    return result["state"]  # ✅ `dict` から `audio_url` を取得
+
+
+"""
+ワークフローの作成
+"""
 def create_graph():
     workflow = _get_workflow()
     graph = workflow.compile()
-    print(graph.get_graph().draw_ascii())
+    get_logger().debug(f"\n{graph.get_graph().draw_ascii()}")
     return graph

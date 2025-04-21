@@ -4,27 +4,8 @@ from pydantic import BaseModel
 import speech_recognition as sr
 from pydub import AudioSegment
 
-from agents.langgraph.graph import create_graph
-
-
-# システムの状態を管理するクラス
-class QAState:
-    def __init__(self, question: str):
-        self.language = None
-        self.question = question
-        self.response = None
-        self.summary = None
-        self.audio_url = None
-        self.next = None
-        self.answer = None
-
-graph = create_graph()
-
-# ワークフローの実行
-def run_workflow(question: str):
-    state = QAState(question).__dict__  # ✅ `dict` に変換
-    result = graph.invoke({"state": state})  # ✅ `state` を `dict` にして渡す
-    return result["state"]  # ✅ `dict` から `audio_url` を取得
+from utils.util import get_logger
+from agents.langgraph.graph import run_workflow
 
 
 app = FastAPI()
@@ -47,7 +28,7 @@ def ask(request: AskRequest):
 受信したバイナリデータを音声ファイルで保存
 """
 def downloadWav(data):
-    print('downloadWav')
+    get_logger().info('downloadWav')
     response = {
         "status": True,
         "message": ''
@@ -62,7 +43,7 @@ def downloadWav(data):
     except Exception as e:
         response['status'] = False
         response['message'] = e
-        print(e)
+        get_logger().error(e)
     finally:
         return response
 
@@ -82,16 +63,15 @@ def convertSpeech2Text():
         try:
             text = recognizer.recognize_google(audio, language="ja-JP")
             response['message'] = text
-            print("文字起こし結果:", text)
+            get_logger().info(f"文字起こし結果: {text}")
         except sr.UnknownValueError as e:
             response['status'] = False
             response['message'] = e
-            print(e)
+            get_logger().error(e)
         except sr.RequestError as e:
-            print('えーら')
             response['status'] = False
             response['message'] = e
-            print(e)
+            get_logger().error(e)
         finally:
             return response
 
@@ -109,12 +89,11 @@ async def sendMP3(websocket, file_path):
             mp3_data = audio_file.read()
             await websocket.send_bytes(mp3_data)
     except Exception as e:
-        print(f"エラー: {e}")
+        get_logger().error(e)
         response['status'] = False
         response['message'] = e
     return response
 
-import time
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -129,23 +108,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # AIエージェント起動
     if speech['status']:
-        print(speech['message'])
+        get_logger().info(speech['message'])
         await websocket.send_json({speech['message']})
         audio_output = run_workflow(speech['message'])
-        print(audio_output)
-        print(audio_output['summary'])
+        get_logger().info(audio_output)
+        get_logger().info(audio_output['summary'])
         await websocket.send_json({'message': audio_output['summary']})
     
     # 回答用の音声ファイルを送信
     await sendMP3(websocket=websocket, file_path="data/outputs/output.mp3")
     await websocket.close() # WebSocket を切断
-
-@app.post("/test")
-def ask(request: AskRequest):
-    question = request.question
-    audio_output = run_workflow(question)
-
-    return {"message": "Good bye."}
 
 
 from agents.integration.gemini_llm import GeminiLLM

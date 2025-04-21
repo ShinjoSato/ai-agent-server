@@ -10,3 +10,5 @@ app/data/outputs/*
 !app/data/outputs/.gitkeep
 app/knowledge/*
 !app/knowledge/.gitkeep
+app/logs/*
+!app/logs/.gitkeep

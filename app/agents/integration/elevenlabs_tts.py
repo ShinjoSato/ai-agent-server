@@ -1,10 +1,10 @@
 import os
 from dotenv import load_dotenv
+from utils.util import get_logger
 from elevenlabs.client import ElevenLabs
 
 # .env 読み込み
 loaded = load_dotenv()
-print("Loaded .env:", loaded)
 
 api_key = os.getenv("ELEVENLABS_API_KEY")
 voice_id = os.getenv("ELEVENLABS_VOICE_ID")
@@ -28,4 +28,4 @@ class ElevenLabs():
         with open(output_file, "wb") as f:
             for chunk in audio_stream:
                 f.write(chunk)
-        print(f"音声ファイルを生成しました: {output_file}")
+        get_logger().info(f"音声ファイルを生成しました: {output_file}")
