@@ -9,7 +9,6 @@ def _get_workflow():
     # LangGraphでワークフローを構築
     workflow = StateGraph(dict)  # ✅ `dict` を状態として使う
 
-    workflow.add_node("identify_language", identify_language)
     workflow.add_node("route_workflow", route_workflow)
     workflow.add_node("retrieve_information", retrieve_information)
     workflow.add_node("browse_web", browse_web)
@@ -18,9 +17,7 @@ def _get_workflow():
     workflow.add_node("transliterate", transliterate)
     workflow.add_node("generate_speech", generate_speech)
 
-
-    workflow.set_entry_point("identify_language")
-    workflow.add_edge("identify_language", "route_workflow")
+    workflow.set_entry_point("route_workflow")
     workflow.add_conditional_edges(
         "route_workflow",
         lambda state: state["next"], {
@@ -43,26 +40,6 @@ def _get_workflow():
 
     # ワークフローのコンパイル
     return workflow
-
-
-"""
-質問が何言語で話されたかを判断する。
-"""
-def identify_language(inputs: dict) -> dict:
-    state = inputs["state"]
-    system_prompts = [
-        """
-        ユーザーの質問が何言語か教えてください。
-        - 英語の場合は「ENGLISH」と答えてください。
-        - 日本語の場合は「JAPANESE」と答えてください。
-        - 中国語の場合は「CHINESE」と答えてください。
-        - それ以外の場合は「OTHER」と答えてください。
-        """
-    ]
-    response = ask_question(user_prompt=f"質問:\n{state['question']}", system_prompts=system_prompts)
-    get_logger().info(response)
-    state["language"] = response
-    return {"state": state}
 
 
 """
@@ -128,7 +105,7 @@ def summarize(inputs: dict) -> dict:
     )
     state["summary"] = response
     get_logger().info(f"要約 >> {response}")
-    is_japanese = state["language"] == "JAPANESE\n"
+    is_japanese = state["language"] == "ja"
     return {"state": state, "is_japanese": is_japanese}
 
 
@@ -178,8 +155,8 @@ def generate_speech(inputs: dict) -> dict:
 システムの状態を管理するクラス
 """
 class QAState:
-    def __init__(self, question: str):
-        self.language = None
+    def __init__(self, question: str, language: str):
+        self.language = language
         self.question = question
         self.response = None
         self.summary = None
@@ -191,8 +168,8 @@ class QAState:
 """
 ワークフローの実行
 """
-def run_workflow(question: str):
-    state = QAState(question).__dict__  # ✅ `dict` に変換
+def run_workflow(question: str, language: str):
+    state = QAState(question=question, language=language).__dict__  # ✅ `dict` に変換
     graph = create_graph()
     result = graph.invoke({"state": state})  # ✅ `state` を `dict` にして渡す
     return result["state"]  # ✅ `dict` から `audio_url` を取得
