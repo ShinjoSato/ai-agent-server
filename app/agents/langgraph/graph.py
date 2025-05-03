@@ -3,6 +3,7 @@ from agents.integration.elevenlabs_tts import ElevenLabs
 from utils.file_handle import load_prompt
 from utils.generative_ai_util import ask_question, surf_internet, retrieval_augmented_generation
 from utils.util import get_logger
+from fastapi import WebSocket
 
 
 def _get_workflow():
@@ -112,8 +113,9 @@ def summarize(inputs: dict) -> dict:
 """
 翻訳する。
 """
-def translate(inputs: dict) -> dict:
+async def translate(inputs: dict) -> dict:
     state = inputs["state"]
+    websocket = state["websocket"]
     summary = state["summary"]
     language = state["language"]
     response = ask_question(
@@ -122,14 +124,16 @@ def translate(inputs: dict) -> dict:
     )
     state["answer"] = response
     get_logger().info(f"翻訳 >> {response}")
+    await websocket.send_json({'message': response})
     return {"state": state}
 
 
 """
 漢字が含まれる文をひらがな化
 """
-def transliterate(inputs: dict) -> dict:
+async def transliterate(inputs: dict) -> dict:
     state = inputs["state"]
+    websocket = state["websocket"]
     summary = state["summary"]
     response = ask_question(
         user_prompt=f"以下の文章をひらがなに変換してください。\n\n文章:\n{summary}",
@@ -137,6 +141,7 @@ def transliterate(inputs: dict) -> dict:
     )
     state["answer"] = response
     get_logger().info(f"ひらがな >> {response}")
+    await websocket.send_json({'message': summary})
     return {"state": state}
 
 
@@ -155,9 +160,10 @@ def generate_speech(inputs: dict) -> dict:
 システムの状態を管理するクラス
 """
 class QAState:
-    def __init__(self, question: str, language: str):
+    def __init__(self, question: str, language: str, websocket: WebSocket):
         self.language = language
         self.question = question
+        self.websocket = websocket
         self.response = None
         self.summary = None
         self.audio_url = None
@@ -168,10 +174,10 @@ class QAState:
 """
 ワークフローの実行
 """
-def run_workflow(question: str, language: str):
-    state = QAState(question=question, language=language).__dict__  # ✅ `dict` に変換
+async def run_workflow(question: str, language: str, websocket: WebSocket):
+    state = QAState(question=question, language=language, websocket=websocket).__dict__  # ✅ `dict` に変換
     graph = create_graph()
-    result = graph.invoke({"state": state})  # ✅ `state` を `dict` にして渡す
+    result = await graph.ainvoke({"state": state})  # ✅ `state` を `dict` にして渡す
     return result["state"]  # ✅ `dict` から `audio_url` を取得
 
 

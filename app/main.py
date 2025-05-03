@@ -3,7 +3,10 @@ import time
 from fastapi import FastAPI, WebSocket
 from pydantic import BaseModel
 from pydub import AudioSegment
+
 import whisper
+model = whisper.load_model("small")
+
 
 from utils.util import get_logger
 from agents.langgraph.graph import run_workflow
@@ -52,7 +55,7 @@ def downloadWav(data):
 """
 Google Speech Recognition で文字起こし
 """
-def convertSpeech2Text():
+async def convertSpeech2Text(websocket: WebSocket):
     response = {
         "status": True,
         "message": '',
@@ -60,13 +63,14 @@ def convertSpeech2Text():
     }
     file_path = "data/uploads/received_audio.wav"
     try:
-        model = whisper.load_model("medium")
         get_logger().info('音声の解析を開始します')
         result = model.transcribe(file_path)
         get_logger().info('解析を終了しました')
         get_logger().info(result)
         response['message'] = result['text']
         response['language'] = result['language']
+        await websocket.send_json({'message': response['message']})
+        await websocket.send_json({'message': response['language']})
     except Exception as e:
         get_logger().error(e)
         response['status'] = False
@@ -102,16 +106,14 @@ async def websocket_endpoint(websocket: WebSocket):
     downloadWav(data)
 
     # 音声ファイルをテキストへ変換
-    speech = convertSpeech2Text()
+    speech = await convertSpeech2Text(websocket=websocket)
 
     # AIエージェント起動
     if speech['status']:
         get_logger().info(speech['message'])
-        await websocket.send_json({'message': speech['message']})
-        audio_output = run_workflow(question=speech['message'], language=speech['language'])
+        audio_output = await run_workflow(question=speech['message'], language=speech['language'], websocket=websocket)
         get_logger().info(audio_output)
         get_logger().info(audio_output['summary'])
-        await websocket.send_json({'message': audio_output['summary']})
     
     # 回答用の音声ファイルを送信
     await sendMP3(websocket=websocket, file_path="data/outputs/output.mp3")
