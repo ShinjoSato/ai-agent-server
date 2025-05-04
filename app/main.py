@@ -1,3 +1,4 @@
+import os
 import io
 import time
 from fastapi import FastAPI, WebSocket
@@ -10,6 +11,8 @@ from agents.langgraph.graph import run_workflow
 
 
 app = FastAPI()
+
+ngrok_url = os.getenv("NGROK_URL")
 
 # リクエストボディの定義
 class AskRequest(BaseModel):
@@ -66,9 +69,8 @@ async def convertSpeech2Text(websocket: WebSocket):
         with open(file_path, 'rb') as f:
             audio_data = f.read()
         # サーバーにPOSTリクエストを送信
-        server_url = "https://5346-34-125-112-42.ngrok-free.app"
         resp = requests.post(
-            f"{server_url}/transcribe",
+            f"{ngrok_url}/transcribe",
             data=audio_data,
             headers={'Content-Type': 'application/octet-stream'}
         )        
