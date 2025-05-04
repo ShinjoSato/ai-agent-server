@@ -16,9 +16,6 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Whisperインストール
-RUN pip install git+https://github.com/openai/whisper.git
-
 # アプリケーションコードをコピー
 COPY . /app
 

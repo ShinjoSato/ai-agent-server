@@ -17,4 +17,3 @@ llama-index
 qdrant-client
 llama-index-vector-stores-qdrant
 loguru
-torch

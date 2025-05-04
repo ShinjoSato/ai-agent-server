@@ -3,10 +3,7 @@ import time
 from fastapi import FastAPI, WebSocket
 from pydantic import BaseModel
 from pydub import AudioSegment
-
-import whisper
-model = whisper.load_model("small")
-
+import requests
 
 from utils.util import get_logger
 from agents.langgraph.graph import run_workflow
@@ -64,9 +61,24 @@ async def convertSpeech2Text(websocket: WebSocket):
     file_path = "data/uploads/received_audio.wav"
     try:
         get_logger().info('音声の解析を開始します')
-        result = model.transcribe(file_path)
+        start = time.time()
+        # 音声ファイルを読み込む
+        with open(file_path, 'rb') as f:
+            audio_data = f.read()
+        # サーバーにPOSTリクエストを送信
+        server_url = "https://5346-34-125-112-42.ngrok-free.app"
+        resp = requests.post(
+            f"{server_url}/transcribe",
+            data=audio_data,
+            headers={'Content-Type': 'application/octet-stream'}
+        )        
+        # レスポンスをJSONとして解析
+        result = resp.json()
+        end = time.time()
+        get_logger().debug(f"音声ファイル分析処理時間: {end - start}秒")
         get_logger().info('解析を終了しました')
         get_logger().info(result)
+
         response['message'] = result['text']
         response['language'] = result['language']
         await websocket.send_json({'message': response['message']})
