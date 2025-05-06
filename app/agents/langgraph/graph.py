@@ -124,7 +124,7 @@ async def translate(inputs: dict) -> dict:
     )
     state["answer"] = response
     get_logger().info(f"翻訳 >> {response}")
-    await websocket.send_json({'message': response})
+    await websocket.send_json({'message': response, 'type': 'response'})
     return {"state": state}
 
 
@@ -141,7 +141,7 @@ async def transliterate(inputs: dict) -> dict:
     )
     state["answer"] = response
     get_logger().info(f"ひらがな >> {response}")
-    await websocket.send_json({'message': summary})
+    await websocket.send_json({'message': summary, 'type': 'response'})
     return {"state": state}
 
 

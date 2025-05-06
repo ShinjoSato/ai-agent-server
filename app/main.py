@@ -83,8 +83,8 @@ async def convertSpeech2Text(websocket: WebSocket):
 
         response['message'] = result['text']
         response['language'] = result['language']
-        await websocket.send_json({'message': response['message']})
-        await websocket.send_json({'message': response['language']})
+        await websocket.send_json({'message': response['language'], 'type': 'language'})
+        await websocket.send_json({'message': response['message'], 'type': 'request'})
     except Exception as e:
         get_logger().error(e)
         response['status'] = False
