@@ -11,4 +11,5 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
+      DOPPLER_TOKEN: ${DOPPLER_TOKEN}
