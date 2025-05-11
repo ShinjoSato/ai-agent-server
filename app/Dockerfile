@@ -23,5 +23,5 @@ RUN pip install --upgrade pip && \
 COPY . /app
 
 # Dopplerで環境変数を注入してアプリを起動
-# CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--reload"]
 CMD ["doppler", "run", "--", "python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--reload"]
+# doppler run -- python -m tests.test01

@@ -5,6 +5,7 @@ services:
     build:
       context: app/.
       dockerfile: Dockerfile
+    # command: ["sleep", "infinity"]
     container_name: ai-agent-server
     volumes:
       - ./app:/app

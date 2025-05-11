@@ -5,6 +5,9 @@ from utils.generative_ai_util import ask_question, surf_internet, retrieval_augm
 from utils.util import get_logger
 from fastapi import WebSocket
 
+from models.User import User
+from models.Message import Message
+
 
 def _get_workflow():
     # LangGraphでワークフローを構築
@@ -101,7 +104,7 @@ def summarize(inputs: dict) -> dict:
 
     character_prompt = load_prompt("prompts/hattori.md")
     response = ask_question(
-        user_prompt=f"以下の質問に対する回答を50トークン以内で要約してください。\n\n質問:\n{question}\n\n回答:\n{content_to_summarize}",
+        user_prompt=f"以下の質問に対する回答を100トークン以内で要約してください。\n\n質問:\n{question}\n\n回答:\n{content_to_summarize}",
         system_prompts=[character_prompt]
     )
     state["summary"] = response
@@ -124,7 +127,20 @@ async def translate(inputs: dict) -> dict:
     )
     state["answer"] = response
     get_logger().info(f"翻訳 >> {response}")
-    await websocket.send_json({'message': response, 'type': 'response'})
+
+    message = Message(
+        message=response,
+        language=language,
+        user=User(
+            type=1,
+            name='Shinjo',
+            voice_url='https://example.com/voice.mp3'
+        )
+    )
+    message_json = message.dict()
+    message_json['user'] = message.user.dict()
+    get_logger().info(message_json)
+    await websocket.send_json(message_json)
     return {"state": state}
 
 
@@ -133,6 +149,7 @@ async def translate(inputs: dict) -> dict:
 """
 async def transliterate(inputs: dict) -> dict:
     state = inputs["state"]
+    language = state["language"]
     websocket = state["websocket"]
     summary = state["summary"]
     response = ask_question(
@@ -141,7 +158,20 @@ async def transliterate(inputs: dict) -> dict:
     )
     state["answer"] = response
     get_logger().info(f"ひらがな >> {response}")
-    await websocket.send_json({'message': summary, 'type': 'response'})
+
+    message = Message(
+        message=summary,
+        language=language,
+        user=User(
+            type=1,
+            name='Shinjo',
+            voice_url='https://example.com/voice.mp3'
+        )
+    )
+    message_json = message.dict()
+    message_json['user'] = message.user.dict()
+    get_logger().info(message_json)
+    await websocket.send_json(message_json)
     return {"state": state}
 
 

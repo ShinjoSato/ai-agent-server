@@ -9,6 +9,9 @@ import requests
 from utils.util import get_logger
 from agents.langgraph.graph import run_workflow
 
+from models.User import User
+from models.Message import Message
+
 
 app = FastAPI()
 
@@ -83,8 +86,19 @@ async def convertSpeech2Text(websocket: WebSocket):
 
         response['message'] = result['text']
         response['language'] = result['language']
-        await websocket.send_json({'message': response['language'], 'type': 'language'})
-        await websocket.send_json({'message': response['message'], 'type': 'request'})
+
+        message = Message(
+            message=response['message'],
+            language=response['language'],
+            user=User(
+                type=0,
+                name='Bot'
+            )
+        )
+        message_json = message.dict()
+        message_json['user'] = message.user.dict()
+        get_logger().info(message_json)
+        await websocket.send_json(message_json)
     except Exception as e:
         get_logger().error(e)
         response['status'] = False
