@@ -3,10 +3,12 @@ from agents.integration.elevenlabs_tts import ElevenLabs
 from utils.file_handle import load_prompt
 from utils.generative_ai_util import ask_question, surf_internet, retrieval_augmented_generation
 from utils.util import get_logger
+from utils.socket import sendMessage
 from fastapi import WebSocket
 
-from models.User import User
 from models.Message import Message
+from models.User import User
+from models.Role import Role
 
 
 def _get_workflow():
@@ -75,8 +77,20 @@ def route_workflow(inputs: dict) -> dict:
 """
 RAGを使って質問に回答
 """
-def retrieve_information(inputs: dict) -> dict:
+async def retrieve_information(inputs: dict) -> dict:
     state = inputs["state"]
+    websocket = state["websocket"]
+    message = Message(
+        message='RAGを使用します',
+        language='ja',
+        type=1, # 設定
+        status=1, # proceed
+        role=Role(
+            type=0
+        )
+    )
+    await sendMessage(websocket=websocket, message=message, key='role')
+
     response = retrieval_augmented_generation(user_prompt=state["question"])
     get_logger().info(f"OpenAI >> {response}")
     state["response"] = response
@@ -97,10 +111,21 @@ def browse_web(inputs: dict) -> dict:
 """
 回答を要約
 """
-def summarize(inputs: dict) -> dict:
+async def summarize(inputs: dict) -> dict:
     state = inputs["state"]
+    websocket = state["websocket"]
     content_to_summarize = state["response"]
     question = state["question"]
+    message = Message(
+        message='要約を開始します',
+        language='ja',
+        type=1, # 設定
+        status=1, # proceed
+        role=Role(
+            type=2
+        )
+    )
+    await sendMessage(websocket=websocket, message=message, key='role')
 
     character_prompt = load_prompt("prompts/hattori.md")
     response = ask_question(
@@ -182,8 +207,20 @@ async def transliterate(inputs: dict) -> dict:
 """
 テキストを音声化
 """
-def generate_speech(inputs: dict) -> dict:
+async def generate_speech(inputs: dict) -> dict:
     state = inputs["state"]
+    websocket = state["websocket"]
+    message = Message(
+        message='音声化を開始します',
+        language='ja',
+        type=1, # 設定
+        status=1, # proceed
+        role=Role(
+            type=1
+        )
+    )
+    await sendMessage(websocket=websocket, message=message, key='role')
+
     elvnlbs = ElevenLabs()
     elvnlbs.execute(user_prompts=state["answer"])
     get_logger().info('成功')

@@ -5,6 +5,7 @@ from datetime import datetime
 class Message(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
+    role_id: int = Field(foreign_key="role.id")
     message: str
     language: str
     type: int # 0: トーク, 1: 設定
@@ -12,3 +13,4 @@ class Message(SQLModel, table=True):
     # created_at: datetime = Field(default_factory=datetime.now)
 
     user: Optional["User"] = Relationship(back_populates="messages")
+    role: Optional["Role"] = Relationship(back_populates="messages")

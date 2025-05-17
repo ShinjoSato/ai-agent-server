@@ -80,3 +80,17 @@ async def convertSpeech2Text(websocket: WebSocket):
         get_logger().error(e)
         response['status'] = False
     return response
+
+
+"""
+メッセージをサーバーに送信する
+"""
+async def sendMessage(websocket: WebSocket, message: Message, key: str):
+    get_logger().info('sendMessageを開始します')
+    message_json = message.dict()
+    if key == 'user':
+        message_json[key] = message.user.dict()
+    elif key == 'role':
+        message_json[key] = message.role.dict()
+    get_logger().info(message_json)
+    await websocket.send_json(message_json)
