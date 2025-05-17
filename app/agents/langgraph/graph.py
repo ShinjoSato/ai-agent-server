@@ -131,9 +131,11 @@ async def translate(inputs: dict) -> dict:
     message = Message(
         message=response,
         language=language,
+        type=0, # トーク
+        status=1, # end
         user=User(
-            type=1,
-            name='Shinjo',
+            type=0,
+            name='Bot',
             voice_url='https://example.com/voice.mp3'
         )
     )
@@ -162,9 +164,11 @@ async def transliterate(inputs: dict) -> dict:
     message = Message(
         message=summary,
         language=language,
+        type=0, # トーク
+        status=1, # end
         user=User(
-            type=1,
-            name='Shinjo',
+            type=0,
+            name='Bot',
             voice_url='https://example.com/voice.mp3'
         )
     )
