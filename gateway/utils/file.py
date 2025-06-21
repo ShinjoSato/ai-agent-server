@@ -1,33 +1,25 @@
-import os
-import requests
-import time
-from fastapi import WebSocket
-from utils.util import get_logger
-
-from models.Message import Message
-from models.User import User
-
-ngrok_url = os.getenv("NGROK_URL")
-
-
 """
-MP3ファイルを送信
+受信したバイナリデータを音声ファイルで保存
 """
-async def sendMP3(websocket: WebSocket, file_path: str):
+def download_wav(data):
+    get_logger().info('download_wav')
     response = {
-        'status': True,
-        'message': ''
+        "status": True,
+        "message": ''
     }
-    # chunk_size = 1024 * 64  # 64KB チャンクで送信（改善点: 速度向上）
     try:
-        with open(file_path, "rb") as audio_file:
-            mp3_data = audio_file.read()
-            await websocket.send_bytes(mp3_data)
+        # 受信する音声データを格納
+        audio_data = bytearray()
+        audio_data.extend(data)
+        file_path = "data/uploads/received_audio.wav"
+        audio = AudioSegment.from_file(io.BytesIO(audio_data), format="webm")
+        audio.export(file_path, format="wav")
     except Exception as e:
-        get_logger().error(e)
         response['status'] = False
         response['message'] = e
-    return response
+        get_logger().error(e)
+    finally:
+        return response
 
 
 """
@@ -80,17 +72,3 @@ async def convert_speech_2_text(websocket: WebSocket):
         get_logger().error(e)
         response['status'] = False
     return response
-
-
-"""
-メッセージをサーバーに送信する
-"""
-async def sendMessage(websocket: WebSocket, message: Message, key: str):
-    get_logger().info('sendMessageを開始します')
-    message_json = message.dict()
-    if key == 'user':
-        message_json[key] = message.user.dict()
-    elif key == 'role':
-        message_json[key] = message.role.dict()
-    get_logger().info(message_json)
-    await websocket.send_json(message_json)

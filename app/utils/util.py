@@ -19,8 +19,8 @@ def get_logger():
 """
 受信したバイナリデータを音声ファイルで保存
 """
-def downloadWav(data):
-    get_logger().info('downloadWav')
+def download_wav(data):
+    get_logger().info('download_wav')
     response = {
         "status": True,
         "message": ''

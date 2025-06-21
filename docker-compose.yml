@@ -14,3 +14,24 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       DOPPLER_TOKEN: ${DOPPLER_TOKEN}
+    networks:
+      - shared-net
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: server-gateway
+    volumes:
+      - ./gateway:/app
+      - ./shared:/shared
+    ports:
+      - "8100:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      DOPPLER_TOKEN: ${DOPPLER_TOKEN}
+    networks:
+      - shared-net
+
+networks:
+  shared-net:
+    external: true

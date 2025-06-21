@@ -1,0 +1,9 @@
+[project]
+name = "shared"
+version = "0.0.1"
+description = "Common utilities for multiple services"
+dependencies = []
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
