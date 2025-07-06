@@ -3,6 +3,8 @@ import requests
 import time
 from fastapi import WebSocket
 from utils.util import get_logger
+import base64
+import json
 
 from models.Message import Message
 from models.User import User
@@ -46,11 +48,15 @@ async def convert_speech_2_text(websocket: WebSocket):
         # 音声ファイルを読み込む
         with open(file_path, 'rb') as f:
             audio_data = f.read()
+        payload = {
+            "audio": base64.b64encode(audio_data).decode('utf-8'),
+        }
+
         # サーバーにPOSTリクエストを送信
         resp = requests.post(
             f"{ngrok_url}/transcribe",
-            data=audio_data,
-            headers={'Content-Type': 'application/octet-stream'}
+            data=json.dumps(payload),
+            headers={'Content-Type': 'application/json'}
         )        
         # レスポンスをJSONとして解析
         result = resp.json()

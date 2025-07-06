@@ -14,6 +14,7 @@ import io
 import torch  # PyTorchをインポート
 import requests
 from urllib.parse import urlparse, parse_qs
+import base64
 
 from google.colab import userdata
 
@@ -117,13 +118,16 @@ def update_doppler_secret_from_env(key: str, value: str) -> bool:
 def handle_transcribe():
     try:
         # リクエストから音声データを取得
-        audio_data = request.get_data()
+        data = request.get_json()
 
-        if not audio_data:
+        if not data:
             return jsonify({
                 "status": False,
                 "error": "音声データが送信されていません"
             }), 400
+        
+        # base64 → バイナリに変換
+        audio_data = base64.b64decode(data["audio"])
 
         # 音声を解析
         result = transcribe_audio(audio_data)
