@@ -4,6 +4,28 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import asyncio
 import websockets
 import json
+import sys
+import logging
+logger = logging.getLogger(__name__)
+# ルートロガーの設定
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# フォーマット
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# ファイル出力用ハンドラ
+file_handler = logging.FileHandler('logs/myapp.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+# コンソール出力用ハンドラ
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 from shared.utils.socket import print_hello
 
@@ -18,15 +40,16 @@ def read_root():
 
 @app.websocket("/ws/text")
 async def receive_text(websocket: WebSocket):
-    print("テキストメッセージ")
+    logger.info("テキストメッセージ")
     await websocket.accept()
     text = await websocket.receive_text()
+    logger.info(text)
     await connect_2_llm_server(websocket=websocket, message=text)
 
 
 @app.websocket("/ws/speech")
 async def receive_speech(websocket: WebSocket):
-    print("音声メッセージ")
+    logger.info("音声メッセージ")
     await websocket.accept()
 
      # 音声ファイルの作成
@@ -35,6 +58,7 @@ async def receive_speech(websocket: WebSocket):
 
     # 音声ファイルをテキストへ変換
     speech = await convert_speech_2_text(websocket=websocket)
+    logger.info(speech)
     await connect_2_llm_server(websocket=websocket, message=speech)
 
 
@@ -57,9 +81,9 @@ async def connect_2_llm_server(websocket: WebSocket, message: str):
                 # クライアントへ応答
                 await websocket.send_json(response_data)
         except websockets.exceptions.ConnectionClosedOK:
-            print("サーバー2が正常に接続を終了しました")
+            logger.info("サーバー2が正常に接続を終了しました")
         except WebSocketDisconnect:
-            print("クライアントが切断されました")
+            logger.info("クライアントが切断されました")
         finally:
-            print("接続終了処理を実行します")
+            logger.info("接続終了処理を実行します")
             await websocket.close()
