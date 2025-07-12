@@ -3,6 +3,7 @@ import requests
 import time
 from fastapi import WebSocket
 from utils.util import get_logger
+from utils.api import post_whisper_api
 import base64
 import json
 
@@ -48,16 +49,17 @@ async def convert_speech_2_text(websocket: WebSocket):
         # 音声ファイルを読み込む
         with open(file_path, 'rb') as f:
             audio_data = f.read()
+        # bodyパラメータの作成
         payload = {
-            "audio": base64.b64encode(audio_data).decode('utf-8'),
+            "input": {
+                "data": {
+                    "audio": base64.b64encode(audio_data).decode('utf-8'),
+                }
+            }
         }
 
         # サーバーにPOSTリクエストを送信
-        resp = requests.post(
-            f"{ngrok_url}/transcribe",
-            data=json.dumps(payload),
-            headers={'Content-Type': 'application/json'}
-        )        
+        resp = post_whisper_api(payload)
         # レスポンスをJSONとして解析
         result = resp.json()
         end = time.time()
@@ -65,8 +67,8 @@ async def convert_speech_2_text(websocket: WebSocket):
         get_logger().info('解析を終了しました')
         get_logger().info(result)
 
-        response['message'] = result['text']
-        response['language'] = result['language']
+        response['message'] = result['output']['text']
+        response['language'] = result['output']['language']
 
         message = Message(
             message=response['message'],
